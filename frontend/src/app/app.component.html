@@ -330,20 +330,19 @@
     </svg>
   </div>
 
-  <!-- Resources 
+  <!-- Resources
   <h2>Resources</h2>-->
-  <h4>Escribe tu mensaje aquí</h4>
+  <h4></h4>
   <div class="card-container">
     <a class="card" target="_blank" rel="noopener">
       <label id="inputMessage"></label>
-      <input type="text" class="form-control" name="inMess" id="imsg" [(ngModel)]="valormsg">
+      <input type="text" class="form-control" name="inMess" id="imsg" [(ngModel)]="valormsg"
+      placeholder="Enter your message">
       <button mat-stroked-button (click)="sendMessage()">Send!</button>
     </a>
-    </div>
-    <div>
-    <h4>El mensaje del cliente es</h4>
-    <a class="card" target="_blank" rel="noopener"> 
-      <span>{{ valormsg }}</span>
+    <a class="card" target="_blank" rel="noopener">
+      <label></label>
+      <label></label>
     </a>
   </div>
 
