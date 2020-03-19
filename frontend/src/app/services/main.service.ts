@@ -1,31 +1,25 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
-interface Message {
-  msg: string;
-}
-
 @Injectable({
   providedIn: 'root'
 })
 
 export class MainService {
-  messages: Message [];
-  readonly URL_API = 'http://localhost:3000/message'
+  readonly URL_API = 'http://localhost:3000'
 
   constructor(private http: HttpClient) { }
 
   getHello() {
-    return this.http.get('http://localhost:3000/');
+    return this.http.get(this.URL_API);
   }
 
-  getMessage(message) {
-    console.log('Recibo: ', message);
-    return this.http.get(this.URL_API +  `/${message}`, message);
+  getMessage() {
+    return this.http.get(this.URL_API +  '/gmessage');
   }
 
-  postMessage(message: Message) {
+  postMessage(message: object) {
     console.log('Envio: ', message);
-    return this.http.post(this.URL_API + `/${message}` , message);
+    return this.http.post(this.URL_API + '/pmessage' , message);
   }
 }

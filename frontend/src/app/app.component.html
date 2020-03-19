@@ -341,9 +341,12 @@
       <button mat-stroked-button (click)="sendMessage()">Send!</button>
     </a>
     <a class="card" target="_blank" rel="noopener">
-      <label></label>
-      <label></label>
+      <!--<label *ngIf='sendMessage()!=0'></label>-->
+      <button mat-stroked-button (click)="get()">Get!</button>
+      <label class="responseg">{{responseg}}</label>
     </a>
+    <h4 class="responseg">
+      Respuesta: {{responseg}}</h4>
   </div>
 
 <router-outlet></router-outlet>
