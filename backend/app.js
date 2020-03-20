@@ -5,7 +5,7 @@ var express = require("express"),
     mongoose = require("mongoose");
     cors = require("cors");
 var router = express.Router();
-const Message = require('./models/message')
+const rsa = require('C:/Users/licadena/Documents/CiberseguridadBigData/Ciberseguridad/Prácticas/P1/modulRSA/index.cjs')
 /* Configuration */
 app.use(bodyParser.urlencoded({ extended: false}))
 app.use(bodyParser.json())
@@ -14,11 +14,11 @@ app.use(router)
 app.use(cors({origin: 'http://localhost:4200'}))
 app.options('*',cors());
 app.use(express.json())
-// Localización de los ficheros estÃ¡ticos
-//app.use(express.static('/public'));
+
 
 /** Basic API **/
 app.get('/', function(req, res) {
+    console.log(rsa.twoModPow(BigInt(7), BigInt(5)).toString())
     res.json({msn: 'Hello World!!!'});
 });
 
