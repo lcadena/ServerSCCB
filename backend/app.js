@@ -11,14 +11,21 @@ app.use(bodyParser.urlencoded({ extended: false}))
 app.use(bodyParser.json())
 app.use(methodOverride())
 app.use(router)
+//cors comunicación con frontend
 app.use(cors({origin: 'http://localhost:4200'}))
 app.options('*',cors());
 app.use(express.json())
+/** Listen on por 3000 and run server **/
+app.listen(3000, () => {
+    console.log("Node server running on http://localhost:3000");
+});
 
+const bitLenght  = 3072
 
 /** Basic API **/
 app.get('/', function(req, res) {
     console.log(rsa.twoModPow(BigInt(7), BigInt(5)).toString())
+    console.log(rsa.rsaKeyGeneration(bitLenght))
     res.json({msn: 'Hello World!!!'});
 });
 
@@ -32,11 +39,6 @@ app.post('/pmessage', (req, res) => {
 //GET del mensaje
 app.get('/gmessage', (req, res) => {
     return res.status(200).send({ message: 'Hola, tu mensaje será encriptado' });
-});
-
-/** Listen on por 3000 and run server **/
-app.listen(3000, () => {
-    console.log("Node server running on http://localhost:3000");
 });
 
 module.exports = app;
