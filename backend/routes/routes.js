@@ -7,7 +7,7 @@ const api = express.Router()
 
 api.get('/', msgCtrl.getTest)
 api.get('/gmessage', msgCtrl.getMsg)
-api.get('/pubkey')
+api.get('/pubkey', msgCtrl.getPubKey)
 api.post('/pmessage', msgCtrl.postMsg)
 api.post('/sign')
 
