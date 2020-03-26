@@ -18,6 +18,10 @@ export class MainService {
     return this.http.get(this.URL_API +  '/gmessage');
   }
 
+  getPublicK() {
+    return this.http.get(this.URL_API + '/pubkey');
+  }
+
   postMessage(message: object) {
     console.log('Envio: ', message);
     return this.http.post(this.URL_API + '/pmessage' , message);
