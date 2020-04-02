@@ -6,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
 })
 
 export class MainService {
-  readonly URL_API = 'http://localhost:3000'
+  readonly URL_API = 'http://localhost:3000';
 
   constructor(private http: HttpClient) { }
 
@@ -25,5 +25,9 @@ export class MainService {
   postMessage(message: object) {
     console.log('Envio: ', message);
     return this.http.post(this.URL_API + '/pmessage' , message);
+  }
+
+  signMsg(message: object) {
+    return this.http.post(this.URL_API + '/signmsg', message);
   }
 }

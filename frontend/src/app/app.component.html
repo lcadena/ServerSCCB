@@ -1,21 +1,8 @@
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * The content below * * * * * * * * * * * -->
-<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * -->
-<!-- * * * * * * * * * * and can be replaced. * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * Delete the template below * * * * * * * * * * -->
-<!-- * * * * * * * to get started with your project! * * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-
-<!--<style>
-
-</style>-->
-
 <!-- Toolbar -->
 <div class="toolbar" role="banner">
     <div class="spacer"></div>
 </div>
-<div class="content" role="main">
+<div class="content">
   <!-- Highlight Card -->
   <div class="card highlight-card card-small">
     <span aling="center">App para encriptar mensajes!</span>
@@ -28,22 +15,28 @@
       <label id="inputMessage"></label>
       <input type="text" class="form-control" name="inMess" id="imsg" [(ngModel)]="valormsg"
       placeholder="Enter your message" required>
-      <button mat-stroked-button (click)="sendMessage()">Send!</button>
+      <!--<button mat-stroked-button (click)="sendMessage()">Send!</button>-->
+      <button mat-stroked-button (click)="sendEncryptMessage()">Send!</button>
     </a>
     <a class="card" target="_blank" rel="noopener">
-      <!--<label *ngIf='sendMessage()!=0'></label>-->
       <button mat-stroked-button (click)="get()">Get!</button>
-      <label class="responseg">{{responseg}}</label>
+      <a>
+        <h5 class="responseg">
+          Respuesta: {{responseg}}</h5>
+      </a>
     </a>
     <a class="card" target="_blank" rel="noopener">
-      <h4 class="responseg">
-        Respuesta: {{responseg}}</h4>
+      <button (click)="getPublicKey()">Get PublicKey!</button>
+      <label id="public-exponent"></label>
     </a>
     <a class="card" target="_blank" rel="noopener">
-      <!--<label *ngIf='sendMessage()!=0'></label>-->
-      <button mat-stroked-button (click)="getPublicKey()">Get PublicKey!</button>
-      <label class="responseg">{{responsegpub}}</label>
+      <button mat-stroked-button (click)="signMessage()">Sign Message!</button>
+      <label class="verifiedmessage">{{verifiedmessage}}</label>
+    </a>
+    <a class="card" target="_blank" rel="noopener">
+      <button mat-stroked-button (click)="blindSignMessage()">Blind Sign Message!</button>
+      <label id="bsign-verified"></label>
     </a>
   </div>
-
+</div>
 <router-outlet></router-outlet>
