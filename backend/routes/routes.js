@@ -16,6 +16,7 @@ api.post('/signmsg', msgCtrl.signMessage)
 /**
  * Non-Repudian Endpoints
  */
+api.post('/nonr', msgCtrl.nonRepudation)
 
 module.exports = api
 

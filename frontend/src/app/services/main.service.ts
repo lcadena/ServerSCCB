@@ -6,28 +6,39 @@ import { HttpClient } from '@angular/common/http';
 })
 
 export class MainService {
-  readonly URL_API = 'http://localhost:3000';
+  readonly URL_A = 'http://localhost:3000';
+  readonly URL_TTP = 'http://localhost:3002';
 
   constructor(private http: HttpClient) { }
 
   getHello() {
-    return this.http.get(this.URL_API);
+    return this.http.get(this.URL_A);
   }
 
   getMessage() {
-    return this.http.get(this.URL_API +  '/gmessage');
+    return this.http.get(this.URL_A +  '/gmessage');
   }
 
+  /* RSA endpoints */
   getPublicK() {
-    return this.http.get(this.URL_API + '/pubkey');
+    return this.http.get(this.URL_A + '/pubkey');
   }
 
   postMessage(message: object) {
     console.log('Envio: ', message);
-    return this.http.post(this.URL_API + '/pmessage' , message);
+    return this.http.post(this.URL_A + '/pmessage' , message);
   }
 
   signMsg(message: object) {
-    return this.http.post(this.URL_API + '/signmsg', message);
+    return this.http.post(this.URL_A + '/signmsg', message);
+  }
+
+  /* Non-repudation endpoints */
+  getPubliKTTP() {
+    return this.http.get(this.URL_TTP + '/pubkeyTTP');
+  }
+
+  postNonRepudation(message: object) {
+    return this.http.post(this.URL_A + '/nonr', message);
   }
 }
