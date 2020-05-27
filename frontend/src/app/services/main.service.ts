@@ -41,4 +41,36 @@ export class MainService {
   postNonRepudation(message: object) {
     return this.http.post(this.URL_A + '/nonr', message);
   }
+
+  postK(message: object) {
+    return this.http.post(this.URL_TTP + '/pm3', message);
+  }
+
+  getKfromTTP() {
+    return this.http.get(this.URL_TTP + '/getk');
+  }
+
+  decryptMessageFromServer(message: object) {
+    return this.http.post(this.URL_A + '/nonrd', message)
+  }
+
+  /*Homomorphism endpoints */
+  getPubKPallier() {
+    return this.http.get(this.URL_A + '/palierk');
+  }
+
+  sumHomomorphic(message: object) {
+    return this.http.post(this.URL_A + '/sum', message);
+  }
+
+  multiplyHomomorphic(message: object) {
+    return this.http.post(this.URL_A + '/mult', message);
+  }
+
+  /**
+   * Shamir'secret endpoints
+   */
+  getSlices() {
+    return this.http.get(this.URL_A + '/getS');
+  }
 }

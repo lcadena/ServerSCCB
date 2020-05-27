@@ -1,21 +1,21 @@
-<!-- Toolbar -->
+<!-- Toolbar
 <div class="toolbar" role="banner">
     <div class="spacer"></div>
 </div>
 <div class="content">
-  <!-- Highlight Card -->
+  <!-- Highlight Card
   <div class="card highlight-card card-small">
     <span aling="center">App para encriptar mensajes!</span>
   </div>
 
   <!-- Resources
-  <h2>Resources</h2>-->
+  <h2>Resources</h2>
   <div class="card-container">
     <a class="card" target="_blank" rel="noopener">
       <label id="inputMessage"></label>
       <input type="text" class="form-control" name="inMess" id="imsg" [(ngModel)]="valormsg"
       placeholder="Enter your message" required>
-      <!--<button mat-stroked-button (click)="sendMessage()">Send!</button>-->
+      <!--<button mat-stroked-button (click)="sendMessage()">Send!</button>
       <button mat-stroked-button (click)="sendEncryptMessage()">Send!</button>
     </a>
     <a class="card" target="_blank" rel="noopener">
@@ -26,7 +26,7 @@
       </a>
     </a>
     <a class="card" target="_blank" rel="noopener">
-      <button (click)="getPublicKey()">Get PublicKey!</button>
+      <button (click)="getPublicKeyB()">Get PublicKey!</button>
       <label id="public-exponent"></label>
     </a>
     <a class="card" target="_blank" rel="noopener">
@@ -37,9 +37,38 @@
       <button mat-stroked-button (click)="blindSignMessage()">Blind Sign Message!</button>
       <label id="bsign-verified"></label>
     </a>
+  </div>
+</div>
+
+<div class="content">
+  <!-- Highlight Card
+  <div class="card highlight-card card-small">
+    <span aling="center">No repudio!</span>
+  </div>
+  <div class="card-container">
     <a class="card" target="_blank" rel="noopener">
-      <a href="./non-repudian/non-repudian/non-repudian.component.html">No repudio!</a>
+      <button (click)="getPublicKeyTTP()">GetK TTP!</button>
+      <label id="public-exponent-ttp"></label>
     </a>
   </div>
+</div>-->
 
+<div>
+  <ul class="nav nav-tabs">
+    <li class="nav-item">
+      <a class="nav-link" href="/encriptation">Encriptation</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" routerLink="/nonrepudation">Non-repudation</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" routerLink="/homomorphism">Homomorphism</a>
+    </li>
+    <!--<li class="nav-item">
+      <a class="nav-link disabled" href="#">Disabled</a>
+    </li>
+  </ul>
+</div>
+<!-- The routed views render in the <router-outlet>-->
 <router-outlet></router-outlet>
+<!--<app-nonrepudation></app-nonrepudation>-->

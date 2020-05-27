@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { NonRepudianComponent } from './non-repudian.component';
+import { NonrepudationComponent } from './nonrepudation.component';
 
-describe('NonRepudianComponent', () => {
-  let component: NonRepudianComponent;
-  let fixture: ComponentFixture<NonRepudianComponent>;
+describe('NonrepudationComponent', () => {
+  let component: NonrepudationComponent;
+  let fixture: ComponentFixture<NonrepudationComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ NonRepudianComponent ]
+      declarations: [ NonrepudationComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(NonRepudianComponent);
+    fixture = TestBed.createComponent(NonrepudationComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

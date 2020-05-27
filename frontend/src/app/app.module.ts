@@ -5,19 +5,29 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-import { NonRepudianComponent } from './non-repudian/non-repudian/non-repudian.component';
+import { NonrepudationComponent } from './components/nonrepudation/nonrepudation.component';
+import { RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { HomomorphismComponent } from './components/homomorphism/homomorphism.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { EncriptationComponent } from './components/encriptation/encriptation.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
-    NonRepudianComponent
+    NonrepudationComponent,
+    HomomorphismComponent,
+    EncriptationComponent,
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
-    FormsModule
+    FormsModule,
+    CommonModule,
+    RouterModule,
+    BrowserAnimationsModule
   ],
   providers: [],
   bootstrap: [AppComponent]
