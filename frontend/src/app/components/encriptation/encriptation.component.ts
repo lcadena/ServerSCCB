@@ -200,7 +200,8 @@ export class EncriptationComponent implements OnInit {
         const bs = bc.hexToBigint(res['message']);
         console.log('Blind signature: ', bs);
         // firma s del mensaje con Kpub de B
-        const s = (bs * bcu.modInv(this.r, this.pubKeyB.n)) % this.pubKeyB.n;
+        const x = bcu.modInv(this.r, this.pubKeyB.n) as bigint
+        const s = (bs * x) % this.pubKeyB.n;
         console.log('Signature: ', s);
         // Unblind
         const mI = this.pubKeyB.verify(s);

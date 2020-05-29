@@ -11,6 +11,7 @@
   "license": "MIT",
   "dependencies": {
     "bigint-conversion": "^2.1.11",
+    "bigint-crypto-utils": "^3.0.6",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
@@ -22,7 +23,6 @@
     "object-sha": "^2.0.5",
     "paillier-bigint": "^3.1.1",
     "rsa": "file:../modulRSA",
-    "bigint-crypto-utils": "^2.5.2",
     "shamirs-secret-sharing": "^1.0.1",
     "socket.io": "^2.3.0"
   },

@@ -25,7 +25,7 @@
     "@material/card": "^5.1.0",
     "@types/jquery": "^3.3.38",
     "bigint-conversion": "^2.1.11",
-    "bigint-crypto-utils": "^2.5.0",
+    "bigint-crypto-utils": "^3.0.6",
     "paillier-bigint": "^3.1.1",
     "rsa": "file:../../modulRSA",
     "rxjs": "^6.5.5",
