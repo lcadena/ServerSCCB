@@ -7,7 +7,7 @@ const paillierBigint = require('paillier-bigint')
 const shamir = require('shamirs-secret-sharing')
 const io = require('socket.io')(3003, {path: ''})
 
-let keys;
+let keys; // keypair of B
 let pubKeyA;
 let pubKeyTTP
 let Po;
@@ -18,6 +18,7 @@ let msgCrypto;
 let pubKeyPallier;
 let privKeyPallier;
 let keysPallier;
+let recoveredH;
 
 function getTest(req, res) {
     console.log(rsa.twoModPow(BigInt(7), BigInt(5)).toString())
@@ -44,7 +45,7 @@ async function postMessage(req, res) {
     let c = req.body.message
     console.log("Mensaje recibido desde el cliente: ", c);
     // m mensaje desencriptado
-    let m = keysB['privateKey'].decrypt(bc.hexToBigint(c))
+    let m = keys['privateKey'].decrypt(bc.hexToBigint(c))
     console.log("Mensaje m: ", m);
     // return res.json({msn: 'Mensaje recibido!'})
     return res.status(200).send({ message: bc.bigintToHex(m) })
@@ -52,7 +53,7 @@ async function postMessage(req, res) {
 
 async function signMessage(req, res) {
     let m = bc.hexToBigint(req.body.message)
-    let s = keysB['privateKey'].sign(m);
+    let s = keys['privateKey'].sign(m);
     return res.status(200).send({ message: bc.bigintToHex(s) })
 }
 
@@ -72,12 +73,13 @@ async function nonRepudation(req, res) {
     // proof (firma digital) asociada al tipo de mensaje
     const digestProof = bc.bigintToHex(pubKeyA.verify(bc.hexToBigint(req.body.signature)))
     console.log('digestProof back: ', digestProof)
+    console.log(sha.hashable(req.body.body))
     const digestBody = await sha.digest(req.body.body)
     console.log('digestBody back: ', digestBody)
     // Generar timestamp de B
     const timestampB = Date.now()
     //TODO poruqe no son iguales el digestproof y el digestbody
-    if ((digestBody !== digestProof)) {
+    if ((digestBody === digestProof)) {
         // Mensaje del body 
         const m = bc.hexToBigint(req.body.body.msg)
         // Creamos el body del mensaje 2
@@ -90,7 +92,7 @@ async function nonRepudation(req, res) {
         };
         const digest = await sha.digest(body, 'SHA-256')
         const digestH = bc.hexToBigint(digest)
-        const signature = await keys['privateKey'].sign(digestH)
+        const signature = keys['privateKey'].sign(digestH)
 
         return res.status(200).send({
             body: body,
@@ -107,7 +109,7 @@ async function decryptMessage(req, res) {
     console.log('digestProofI: ', digestProofI)
     const digestBodyI = await sha.digest(req.body.body)
     console.log('digestBodyI: ', digestBodyI)
-    if(digestBodyI !== digestProofI) {
+    if(digestBodyI === digestProofI) {
         // proof of publication
         pkp = req.body.signature
         console.log('pkp: ', pkp)
@@ -118,25 +120,18 @@ async function decryptMessage(req, res) {
         const decryptMSG = await decryptM(keyAES, iv)
         console.log('decryptedmessage: ', decryptMSG)
 
-
+        return res.status(200).send({
+            po: Po,
+            pkp: pkp,
+            key: keyAES,
+            message: decryptMSG
+        })
+    } else {
+        return res.status(500).send({msg: 'Error a desencriptar el mensaje'})
     }
-    return res.status(200).send({msg: 'todo ok!!!'})
 }
 
 async function decryptM(k, iv) {
-    // console.log('Mensage que llega a decrypt: ', message)
-    // const result = await crypto.subtle.decrypt(
-    //   {
-    //     name: 'AES-CBC',
-    //     iv: iv
-    //   },
-    //   keyAES,
-    //   bc.textToBuf(message)
-    // );
-    // console.log('Resultado desencriptar AES-CBC: ' + result)
-    // const dec = bc.bufToHex(result)
-    // console.log('Resultado buffer a hex: ' + dec)
-    // return dec;
     console.log('Mensage que llega a decrypt: ', msgCrypto)
     const encrypted = Buffer.from(msgCrypto, 'hex')
     console.log('encrypted: ', encrypted)
@@ -195,15 +190,44 @@ async function getslicesShamir(req, res) {
 //     let slices = [];
 //     splits.forEach(split => slices.push(bc.bufToHex(split)))
 //     return res.status(200).send({slices})
+    // const secret = bc.bigintToBuf(keys.privateKey.d)
+    // console.log('secret', secret)
+    // console.log('secret buftoH', bc.bufToHex(secret))
+    // slices = secretInit(secret)
+    // console.log('slices: ', slices)
+    // console.log({slices: slices})
+
+    // return res.status(200).send({message: 'Generando slices para el secreto compartido'})
+}
+
+async function recoverMsgShamir(req, res) {
+    const c = req.body.message
+    console.log("Mensaje recibido desde el cliente: ", c);
+    console.log('private key B: ', keys['privateKey'])
     const secret = bc.bigintToBuf(keys.privateKey.d)
     console.log('secret', secret)
     console.log('secret buftoH', bc.bufToHex(secret))
     const slices = secretInit(secret)
     console.log('slices: ', slices)
-    console.log({slices:slices})
-
-
-
+    console.log({slices: slices})
+    // recover the key 
+    const recovered = shamir.combine(await slices)
+    console.log('recovered: ', recovered)
+    console.log('recovered to string: ', recovered.toString())
+    console.log('recovered buf to hex: ', bc.bufToHex(recovered))
+    console.log('recovered buf to bigint: ', bc.bufToBigint(recovered))
+    //console.log('recovered hex to bigint: ', bc.hexToBigint(recovered))
+    console.log('private key B: ', keys['privateKey'])
+    // m mensaje desencriptado
+    recoveredH = bc.bufToBigint(recovered)
+    console.log('recoveredH: ', recoveredH)
+    //let m = recoveredH.decrypt(bc.hexToBigint(c))
+    const newKey = new rsa.PrivateKey(recoveredH, keys['publicKey'])
+    console.log('newKey: ', newKey)
+    let mm = newKey.decrypt(bc.hexToBigint(c))
+    console.log("Mensaje mm: ", mm);
+    // return res.json({msn: 'Mensaje recibido!'})
+    return res.status(200).send({ message: bc.bigintToHex(mm) })
 }
 
 /**
@@ -214,6 +238,9 @@ async function secretInit(secret){
     console.log('secret: ', secret)
     const buffers = shamir.split(secret, {shares: 4, threshold: 2})
     console.log('buffers: ', buffers)
+    /**
+     * @typedef {Array<string>} slices
+     */
     const slices = []
     buffers.forEach(buffer => slices.push(bc.bufToHex(buffer)))
     return slices
@@ -231,5 +258,6 @@ module.exports = {
     homomorphicSum,
     homomorphicMultiply,
     getslicesShamir,
-    decryptMessage
+    decryptMessage,
+    recoverMsgShamir
 }

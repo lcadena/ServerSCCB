@@ -17,13 +17,19 @@ export class EncriptationComponent implements OnInit {
   title = 'encriptation';
   valormessage;
   valormessagenr;// non-repudation message
+  valormessageshamir; // shamir's message
   responseg: string;
   responsep: string;
+  responses: string; // response from server shamir decryption message
+  responsegetSlices: string;
   decryptmessage: string;
+  decryptmessagenr: string;
+  decryptmessageS: string;
   verifiedmessage: string;
   publicexponentB: string;
   publicexponentTTP: string;
   blindverifiedmsg;
+  msgdecryptB;
   pubKeyB; // clave publica de B
   pubKeyTTP; // clave publica de TTP
   keys: rsa.keys;
@@ -34,6 +40,8 @@ export class EncriptationComponent implements OnInit {
   c;
   Pr;
   Pkp;
+  po;
+  pkp;
   kFromTTP;
 
   constructor(private mainservice: MainService, private router: Router) { }
@@ -151,7 +159,6 @@ export class EncriptationComponent implements OnInit {
           console.log('mensage en responsep: ', this.responsep);
           console.log('mensage desencriptado: ', this.decryptmessage);
         });
-    console.log('Works!');
   }
 
   /**
@@ -211,33 +218,34 @@ export class EncriptationComponent implements OnInit {
    * No Repudio - AES CBC para encriptar/desencriptar + iv
    */
   async postNonRepudiation() {
-    // mensaje
+    // mensaje que será enviado a B
     let m = this.valormessagenr;
-    // encriptar con AES-CBC
+    // mesaje encriptado con AES-CBC
     this.c = await this.encrypt(m)
-    console.log('Mensaje encriptado aes: ', this.c)
+    console.log('Mensaje encriptado aes-cbc: ', this.c)
     let mB = bc.textToBigint(m)
     console.log('Mensaje en Bigint: ', mB)
     let mH = bc.bigintToHex(mB)
     console.log('Mensaje en Hexadecimal: ', mH)
-    // Genero el timestamp
-    const tsA = Date.now()
+    // // Genero el timestamp
+    // const tsA = Date.now()
     // Construimos el body del mensaje 1
     const body = {
       type: '1',
       src: 'A',
       dst: 'B',
       msg: this.c,
-      timestamp: tsA
+      timestamp: Date.now()
     };
     // Generar firma con hash del body
-    const digest = sha.digest(body, 'SHA-256');
+    console.log(sha.hashable(body))
+    const digest = await sha.digest(body, 'SHA-256');
     // Digest en Hexadecimal
-    const digestH = bc.hexToBigint(await digest);
+    const digestH = bc.hexToBigint(digest);
     // Firmar con clave privada A
     let signature = this.keys.privateKey.sign(digestH);
     console.log('signature en A: ', signature)
-    // proof of origin
+    // proof of origin - sign(digestH(body type1))
     signature = bc.bigintToHex(signature);
     console.log('signature biginttoHex: ', signature)
     // Construimos mensaje 1
@@ -254,32 +262,42 @@ export class EncriptationComponent implements OnInit {
       .subscribe( async res => {
         console.log('respuesta del server mensaje 2----')
         console.log(res)
+        // verificamos el timestamp
+        const tsnow = Date.now()
+        console.log('tsnow: ', tsnow)
+        const tsresponse = res['body']['timestamp']
+        console.log('tsresponse: ', tsresponse)
         // proof (firma digital) asociada al tipo de mensaje - verificar proof
         const digestProof = bc.bigintToHex(await this.pubKeyB.verify(bc.hexToBigint(res['signature'])))
         console.log('digestProof en A: ', digestProof)
         const digestBody = await sha.digest(res['body'])
         console.log('digest body en A: ', digestBody)
-        //(res['body']['type'] == 2) &&
-        if((digestProof !== digestBody)) {
+        //(res['body']['type'] == 2) && )
+        if((digestProof === digestBody) && (tsresponse > (tsnow - 180000) && tsresponse < (tsnow + 180000))) {
           // Proof reception
           this.Pr = res['signature']
-          const keyII = await this.exportKeyAES()
-          console.log('keyII: ', keyII)
+          //const keyII = await this.exportKeyAES()
+          //console.log('keyII: ', keyII)
           console.log('exportkey: ', this.exportKey)
           // Construimos body del mensaje 3
           const body = {
             type: '3',
             src: 'A',
-            dst: 'B',
-            ttp: 'TTP',
+            dst: 'TTP',
             msg: bc.bufToHex(this.exportKey),
             iv: bc.bufToHex(this.ivAES),
             timestamp: Date.now()
           };
           // Firma
+          console.log('---------------------')
+          console.log(body)
+          console.log('---------------------')
           const digestTTP = await sha.digest(body, 'SHA-256')
-          const digestHTTP = await bc.hexToBigint(digestTTP)
-          let signatureTTP = this.keys.privateKey.sign(digestHTTP)
+          console.log('digestTTP: ', digestTTP)
+          const digestHTTP = bc.hexToBigint(digestTTP)
+          console.log('digestHTTP: ', digestHTTP)
+          // pko proof of origin of k
+          let signatureTTP = await this.keys.privateKey.sign(digestHTTP)
           signatureTTP = bc.bigintToHex(signatureTTP)
           // Construimos mensaje que se envia a la TTP
           const messageTTP = {
@@ -290,14 +308,16 @@ export class EncriptationComponent implements OnInit {
               n: bc.bigintToHex(this.keys.publicKey.n)
             }
           };
-          //TODO funcion enviar el mensaje a la ttp tanto back como front
           this.mainservice.postK(messageTTP)
             .subscribe( async res => {
               // Verificar las pruebas recepciones
               console.log('response de la ttp: ', res)
               const digestProof2 = bc.bigintToHex(this.pubKeyTTP.verify(bc.hexToBigint(res['signature'])))
               console.log('digestProof2: ', digestProof2)
-              const digestBody2 = await sha.digest(res['body'])
+              const digestBody2 = await sha.digest(res['body']);
+              console.log('---------------------')
+              console.log(sha.hashable(res['body']))
+              console.log('---------------------')
               console.log('digestBody2: ', digestBody2)
               // Verificar timestamp - (res['body']['type'] == 4) &&
               if ((digestBody2 === digestProof2)) {
@@ -335,7 +355,10 @@ export class EncriptationComponent implements OnInit {
         }
         this.mainservice.decryptMessageFromServer(message)
           .subscribe(res => {
-
+            console.log('response en el decrypt message: ', res)
+            this.decryptmessagenr = res['message']
+            this.po = res['po']
+            this.pkp = res['pkp']
           })
       })
   }
@@ -415,6 +438,32 @@ export class EncriptationComponent implements OnInit {
     this.mainservice.getSlices()
       .subscribe(res => {
         console.log('res-- ', res)
+        this.responsegetSlices = res['message']
+        //$('alert alert-success').alert();
+        setTimeout(function () {
+          document.getElementById('bootstrap-alert').style.display = 'none'
+        })
+        alert(this.responsegetSlices)
       })
+  }
+
+  sendEncryptmsgShamir() {
+    // m mensaje encriptado conclave publica B
+    const mEncrypt = this.pubKeyB.encrypt(bc.textToBigint(this.valormessageshamir));
+    console.log('Shamir secret sharing------------------')
+    console.log('Encrypted mesage : ', mEncrypt);
+    const message = {
+      message: bc.bigintToHex(mEncrypt)
+    };
+    console.log('Message: ', message);
+    this.mainservice.sendShamirEncryptMessage(message)
+      .subscribe(res => {
+          console.log('mensage en suscribe encryptmsgShamir: ', res);
+          this.responses = res['message'];
+          this.msgdecryptB = bc.hexToBigint(res['message'])
+          this.decryptmessageS = bc.bigintToText(bc.hexToBigint(res['message']));
+          console.log('mensage en responsep: ', this.responses);
+          console.log('mensage desencriptado: ', this.decryptmessageS);
+        });
   }
 }

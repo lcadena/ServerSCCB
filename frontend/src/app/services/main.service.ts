@@ -73,4 +73,8 @@ export class MainService {
   getSlices() {
     return this.http.get(this.URL_A + '/getS');
   }
+
+  sendShamirEncryptMessage(message: object) {
+    return this.http.post(this.URL_A + '/msgS', message)
+  }
 }

@@ -10,22 +10,23 @@
   "author": "Liz Cadena",
   "license": "MIT",
   "dependencies": {
-    "bigint-conversion": "^2.1.1",
+    "bigint-conversion": "^2.1.11",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-handlebars": "^3.1.0",
     "method-override": "^3.0.0",
-    "moment": "^2.24.0",
-    "mongoose": "^5.9.2",
+    "moment": "^2.26.0",
+    "mongoose": "^5.9.16",
     "morgan": "^1.10.0",
-    "object-sha": "^2.0.2",
-    "paillier-bigint": "^3.0.5",
+    "object-sha": "^2.0.5",
+    "paillier-bigint": "^3.1.1",
     "rsa": "file:../modulRSA",
+    "bigint-crypto-utils": "^2.5.2",
     "shamirs-secret-sharing": "^1.0.1",
     "socket.io": "^2.3.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.2"
+    "nodemon": "^2.0.4"
   }
 }

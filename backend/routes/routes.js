@@ -29,6 +29,7 @@ api.post('/mult', msgCtrl.homomorphicMultiply)
  * Secret Sharing Service
  */
 api.get('/getS', msgCtrl.getslicesShamir)
+api.post('/msgS', msgCtrl.recoverMsgShamir)
 
 module.exports = api
 

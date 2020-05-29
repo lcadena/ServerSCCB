@@ -44,20 +44,27 @@
     <h2>Non Repudation</h2></div>
   <div class="card-body">
     <form>
-      <div class="form-group">
+      <!--<div class="form-group">
         <button type="button" class="btn btn-outline-primary" (click)="getPublicKeyTTP()">Get TTP PublicKey!</button>
         <label id="public-exponent">Public exponent:</label>
         <label>{{ publicexponentTTP }}</label>
-      </div>
+      </div>-->
       <div class="form-group">
         <label id="inputMessageNR">Message to send</label>
         <input type="text" class="form-control" name="inMessageNR" id="inputmsgnr" placeholder="Enter your message" [(ngModel)]="valormessagenr" required>
         <button type="button" class="btn btn-outline-primary" (click)="postNonRepudiation()">Send!</button>
       </div>
       <div class="form-group">
-        <button type="button" class="btn btn-outline-primary" (click)="decryptMessage()">Download K!</button>
-        <label id="public-exponent">K from TTP:</label>
-        <label>{{ kFromTTP }}</label>
+        <button type="button" class="btn btn-outline-primary" (click)="decryptMessage()">Decrypt message!</button>
+      </div>
+      <div class="form-group">
+        <label class="msgdecryptB">Proof of origin: {{ po }}</label>
+      </div>
+      <div class="form-group">
+        <label class="msgdecryptB">Proof of publication of k: {{ pkp }}</label>
+      </div>
+      <div class="form-group">
+        <label class="decryptmessagenr">Decripted message with non-repudation: {{ decryptmessagenr }}</label>
       </div>
       <!--<div class="form-group">
         <label id="inputMessage">Message to send encrypted</label>
@@ -78,20 +85,31 @@
 </div>
 <div class="card">
   <div class="card-header">
-    <h2>Shamir secret sharing</h2></div>
+    <h2 class="font-weight-bold">Shamir secret sharing</h2>
+    <p class="font-italic">Forma de compartición de secretos. El secreto va a ser la clave privada del servidor, se hacen 4 particiones del secreto, y para reconstruirlo
+      hará falta todas o algunas de las partes.</p>
+    <p class="font-italic">Al reconstriur la clave privada, se podrá desencriptar el mensaje que se envia encriptado desde el cliente.</p>
+  </div>
   <div class="card-body">
     <form>
-      <div class="form-group">
+      <!--<div class="form-group">
         <button type="button" class="btn btn-outline-primary" (click)="getSlices()">Get Slices!</button>
-        <!--<label id="public-exponent">K from TTP:</label>
-        <label>{{ kFromTTP }}</label>-->
+        <div class="alert alert-success" role="alert" style='display:none' id='bootstrap-alert'>{{ responsegetSlices }}</div>
+        <label id="public-exponent">K from TTP:</label>
+        <label>{{ kFromTTP }}</label>
+      </div>-->
+      <div class="form-group">
+        <label id="inputMessage">Message to send encrypted</label>
+        <input type="text" class="form-control" name="inMessageS" id="inputmsgshamir" placeholder="Enter your message" [(ngModel)]="valormessageshamir" required>
+        <button type="button" class="btn btn-outline-primary" (click)="sendEncryptmsgShamir()">Send!</button>
+      </div>
+      <div class="form-group">
+        <label class="msgdecryptB">Mensaje del servidor: {{ msgdecryptB }}</label>
+      </div>
+      <div class="form-group">
+        <label class="decryptmessageS">Mensaje desencriptado: {{ decryptmessageS }}</label>
       </div>
       <!--<div class="form-group">
-        <label id="inputMessage">Message to send encrypted</label>
-        <input type="text" class="form-control" name="inMessage" id="inputmsg" placeholder="Enter your message" [(ngModel)]="valormessage" required>
-        <button type="button" class="btn btn-outline-primary" (click)="sendEncryptMessage()">Send!</button>
-      </div>
-      <div class="form-group">
         <label for="exampleInputPassword1">Password</label>
         <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
       </div>
