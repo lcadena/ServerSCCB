@@ -30,6 +30,10 @@ export class EncriptationComponent implements OnInit {
   publicexponentTTP: string;
   blindverifiedmsg;
   msgdecryptB;
+  si; // mensaje firmado por el servidor
+  sM; // verificación de la firma del servidor
+  abs; // mensaje firmado y cegado enviado por el servidor
+  bm; // mesaje cegado
   pubKeyB; // clave publica de B
   pubKeyTTP; // clave publica de TTP
   keys: rsa.keys;
@@ -51,7 +55,7 @@ export class EncriptationComponent implements OnInit {
     this.getPublicKeyB();
     // Obtener Kpub de TTP
     this.getPublicKeyTTP();
-    // Generar claves de A
+    // Generar claves de A con modulo rsa
     this.keys = rsa.rsaKeyGeneration();
     console.log('Claves de A onInit: ', this.keys);
     // Generar clave criptográfica AES-CBC
@@ -91,7 +95,7 @@ export class EncriptationComponent implements OnInit {
   async getPublicKeyB() {
     this.mainservice.getPublicK()
       .subscribe( res => {
-        // pubKey clave publica de B
+        // pubKeyB clave publica de B
         this.pubKeyB = new rsa.PublicKey(bc.hexToBigint(res['e']), bc.hexToBigint(res['n']));
         console.log('e pubkey on getPublicKeyB: ', this.pubKeyB.e);
         //document.getElementById('public-exponent').innerHTML =  'Exponente público: ' + this.pubKey.e;
@@ -143,75 +147,100 @@ export class EncriptationComponent implements OnInit {
    * Función que envia el mensaje  encriptado
    */
   sendEncryptMessage() {
-    // c mensaje encriptado conclave publica B
+    console.log('Enviar mensaje encriptado -------------------------------------------')
+    // c mensaje encriptado con clave publica B
     const c = this.pubKeyB.encrypt(bc.textToBigint(this.valormessage));
-    console.log('Encrypted mesage : ', c);
+    document.getElementById('enc-message').innerHTML =  'Encrypted message to be sent to the client: ' + c;
+    console.log('Mensaje encriptado: ', c);
     const message = {
       message: bc.bigintToHex(c)
     };
-    console.log('Message: ', message);
+    console.log('Mensaje formato JSON: ', message);
     this.mainservice.postMessage(message)
-      .subscribe(
-        res => {
-          console.log('mensage en suscribe: ', res);
+      .subscribe(res => {
+          console.log('Mensaje desencriptado en el cliente', {
+            msg: bc.hexToBigint(res['message'])
+          })
           this.responsep = res['message'];
           this.decryptmessage = bc.bigintToText(bc.hexToBigint(res['message']));
-          console.log('mensage en responsep: ', this.responsep);
-          console.log('mensage desencriptado: ', this.decryptmessage);
+          console.log('Mensaje original desencriptado: ', this.decryptmessage);
+          document.getElementById('dec-message').innerHTML =  'Mensaje original desencriptado: ' + this.decryptmessage;
+          console.log('-------------------------------------------------------------')
         });
   }
 
   /**
-   * Firma Digital > para estar seguros que el mensaje lo ha originado el cliente
+   * Firma Digital
+   * Firma utilizando las claver del servidor (para estar seguros que el mensaje lo ha originado el cliente)
    */
-  signMessage() {
+  async signMessage() {
+    console.log('Modulo Firma -------------------------------------------')
     const m = bc.bigintToHex(bc.textToBigint(this.valormessage));
-    console.log('m--: ', m);
+    console.log('Mensaje desde el cliente que va a ser firmado: ', m);
     const message = { message: m };
     this.mainservice.signMsg(message)
       .subscribe( res => {
+          console.log('Sign message en el cliente', {
+            sign: res['message']
+          })
+          this.si = res['message']
           let s = bc.hexToBigint(res['message']);
-          console.log('message s: ', s);
-          // verificamos el mensaje
+          //console.log('message s: ', s);
+          // verificamos la firma del servidor en el mensaje
           let m = this.pubKeyB.verify(s);
-          console.log('message m: ', m);
+          this.sM = this.pubKeyB.verify(s);
+          console.log('Verificación de la firma: ', m);
           this.verifiedmessage = bc.bigintToText(m);
-          console.log('message verified: ', this.verifiedmessage);
+          console.log('Mensaje original verificado: ', this.verifiedmessage);
+          console.log('-------------------------------------------------------------')
       });
   }
 
   /**
-   * Firma ciega > hacer firmar a alguien sin su consentimiento
+   * Firma ciega
+   * Firma ciega utilizando las claver del servidor (hacer firmar a alguien sin su consentimiento)
    */
   async blindSignMessage() {
+    console.log('Modulo Firma Ciega -------------------------------------------')
     const m = bc.textToBigint(this.valormessage);
-    console.log('m en blind: ', m);
+    console.log('Mensaje desde el cliente para firma ciega: ', m);
     // factor de cegado random r
     this.r = await bcu.prime(bcu.bitLength(this.pubKeyB.n));
-    console.log('r en blind: ', this.r);
-    // b mensaje cegado
+    console.log('Factor de cegado r en el cliente: ', this.r);
+    // b mensaje cegado - Blinding
     const b = bc.bigintToHex((m * this.pubKeyB.encrypt(this.r)) % this.pubKeyB.n);
-    console.log('b en blind: ', b);
+    this.bm = b
+    console.log('Mensaje cegado en el cliente: ', b);
     // construyo el mensaje con b cegado
-    const message = { message: b };
+    const message = {
+      message: b
+    };
     this.mainservice.signMsg(message)
       .subscribe( res => {
+        console.log('Mensaje cegado y firmado en el cliente', {
+          sign: res['message']
+        })
         // firma ciega
+        this.abs = res['message']
         const bs = bc.hexToBigint(res['message']);
-        console.log('Blind signature: ', bs);
-        // firma s del mensaje con Kpub de B
+        // console.log('Blind signature: ', bs);
+        // firma s del mensaje con Kpub de B, multiplicamos por la inversa del factor de cegado r
         const x = bcu.modInv(this.r, this.pubKeyB.n) as bigint
         const s = (bs * x) % this.pubKeyB.n;
-        console.log('Signature: ', s);
+        console.log('Mensaje firmado en el cliente: ', s);
         // Unblind
         const mI = this.pubKeyB.verify(s);
-        console.log('Unblind: ', mI);
-        const mII = bc.bigintToText(mI);
+        console.log('Unblind en el cliente: ', mI);
+        const mII = bc.bigintToText(mI) as string;
         this.blindverifiedmsg = mII;
-        console.log('mII en blind: ', mII);
-        //document.getElementById('bsign-verified').innerHTML =  'El mensaje que se ha verificado es: ' + bc.bigintToText(mI) as string;
-        console.log('mI: ', mI)
-        console.log('mII', bc.bigintToText(mI) as string)
+        console.log('Mensaje original verificado: ', mII);
+        document.getElementById('blind-message').innerHTML =  'Mensaje cegado: ' + this.bm;
+        document.getElementById('bsign-message').innerHTML =  'Firma ciega del mensaje: ' + this.abs;
+        document.getElementById('verify-message').innerHTML =  'Verificación firma: ' + mI;
+        document.getElementById('bsign-verified').innerHTML =  'Mensaje original verificado: ' + bc.bigintToText(mI) as string;
+        // console.log('mI: ', mI)
+        // console.log('mII', bc.bigintToText(mI) as string)
+        console.log('-------------------------------------------------------------')
       });
   }
 
@@ -219,15 +248,16 @@ export class EncriptationComponent implements OnInit {
    * No Repudio - AES CBC para encriptar/desencriptar + iv
    */
   async postNonRepudiation() {
+    console.log('Modulo No-Repudio -------------------------------------------')
     // mensaje que será enviado a B
     let m = this.valormessagenr;
     // mesaje encriptado con AES-CBC
     this.c = await this.encrypt(m)
-    console.log('Mensaje encriptado aes-cbc: ', this.c)
+    console.log('Mensaje encriptado AES-CBC en A: ', this.c)
     let mB = bc.textToBigint(m)
-    console.log('Mensaje en Bigint: ', mB)
+    //console.log('Mensaje en Bigint: ', mB)
     let mH = bc.bigintToHex(mB)
-    console.log('Mensaje en Hexadecimal: ', mH)
+    //console.log('Mensaje en Hexadecimal: ', mH)
     // // Genero el timestamp
     // const tsA = Date.now()
     // Construimos el body del mensaje 1
@@ -239,16 +269,17 @@ export class EncriptationComponent implements OnInit {
       timestamp: Date.now()
     };
     // Generar firma con hash del body
-    console.log(sha.hashable(body))
+    // console.log(sha.hashable(body))
     const digest = await sha.digest(body, 'SHA-256');
     // Digest en Hexadecimal
     const digestH = bc.hexToBigint(digest);
     // Firmar con clave privada A
     let signature = this.keys.privateKey.sign(digestH);
-    console.log('signature en A: ', signature)
+    // firma del mesnaje con la clave privada del cliente
+    console.log('Sign en A: ', signature)
     // proof of origin - sign(digestH(body type1))
     signature = bc.bigintToHex(signature);
-    console.log('signature biginttoHex: ', signature)
+    console.log('Proof origen en A: ', signature)
     // Construimos mensaje 1
     const message = {
       body: body,
@@ -261,25 +292,28 @@ export class EncriptationComponent implements OnInit {
 
     this.mainservice.postNonRepudation(message)
       .subscribe( async res => {
-        console.log('respuesta del server mensaje 2----')
-        console.log(res)
+        console.log('Respuesta del servidor mensaje type = 2 ----')
+        // console.log(res)
         // verificamos el timestamp
-        const tsnow = Date.now()
-        console.log('tsnow: ', tsnow)
-        const tsresponse = res['body']['timestamp']
-        console.log('tsresponse: ', tsresponse)
+        const tsnowA = Date.now()
+        console.log('tsnowA: ', tsnowA)
+        const tsresponseB = res['body']['timestamp']
+        console.log('tsresponseB en A: ', tsresponseB)
         // proof (firma digital) asociada al tipo de mensaje - verificar proof
         const digestProof = bc.bigintToHex(await this.pubKeyB.verify(bc.hexToBigint(res['signature'])))
-        console.log('digestProof en A: ', digestProof)
+        // console.log('digestProof en A: ', digestProof)
         const digestBody = await sha.digest(res['body'])
-        console.log('digest body en A: ', digestBody)
+        // console.log('digest body en A: ', digestBody)
         //(res['body']['type'] == 2) && )
-        if((digestProof === digestBody) && (tsresponse > (tsnow - 180000) && tsresponse < (tsnow + 180000))) {
+        if((digestProof === digestBody) && (tsresponseB > (tsnowA - 180000) && tsresponseB < (tsnowA + 180000))) {
           // Proof reception
           this.Pr = res['signature']
+          console.log('Proff de recepción en A: ', {
+            pr: this.Pr
+          })
           //const keyII = await this.exportKeyAES()
           //console.log('keyII: ', keyII)
-          console.log('exportkey: ', this.exportKey)
+          console.log('Key AES-CBD a exportar: ', this.exportKey)
           // Construimos body del mensaje 3
           const body = {
             type: '3',
@@ -290,16 +324,17 @@ export class EncriptationComponent implements OnInit {
             timestamp: Date.now()
           };
           // Firma
-          console.log('---------------------')
-          console.log(body)
-          console.log('---------------------')
+          // console.log('---------------------')
+          // console.log(body)
+          // console.log('---------------------')
           const digestTTP = await sha.digest(body, 'SHA-256')
-          console.log('digestTTP: ', digestTTP)
+          // console.log('digestTTP: ', digestTTP)
           const digestHTTP = bc.hexToBigint(digestTTP)
-          console.log('digestHTTP: ', digestHTTP)
+          // console.log('digestHTTP: ', digestHTTP)
           // pko proof of origin of k
           let signatureTTP = await this.keys.privateKey.sign(digestHTTP)
           signatureTTP = bc.bigintToHex(signatureTTP)
+          console.log('Proof origen de K en A: ', signatureTTP)
           // Construimos mensaje que se envia a la TTP
           const messageTTP = {
             body: body,
@@ -316,10 +351,10 @@ export class EncriptationComponent implements OnInit {
               const digestProof2 = bc.bigintToHex(this.pubKeyTTP.verify(bc.hexToBigint(res['signature'])))
               console.log('digestProof2: ', digestProof2)
               const digestBody2 = await sha.digest(res['body']);
-              console.log('---------------------')
-              console.log(sha.hashable(res['body']))
-              console.log('---------------------')
-              console.log('digestBody2: ', digestBody2)
+              // console.log('---------------------')
+              // console.log(sha.hashable(res['body']))
+              // console.log('---------------------')
+              // console.log('digestBody2: ', digestBody2)
               // Verificar timestamp - (res['body']['type'] == 4) &&
               if ((digestBody2 === digestProof2)) {
                 console.log('respuesta de la ttp: ', res['body']['type'])
@@ -329,8 +364,9 @@ export class EncriptationComponent implements OnInit {
                 console.log('Proof of reception: ', this.Pr)
               }
           })
-        } else { console.log('Error en el reception mensaje 3')}
 
+        } else { console.log('Error en el reception mensaje 3') }
+        console.log('---------------------------------------------------------------------------')
       });
 
   }
@@ -344,6 +380,7 @@ export class EncriptationComponent implements OnInit {
   }
 
   async decryptMessage() {
+    console.log('Desencriptar mensaje con No-Repudio -------------------------------------------')
     this.mainservice.getKfromTTP()
       .subscribe(res => {
         console.log('response en decryptmessage: ', res)
@@ -361,6 +398,7 @@ export class EncriptationComponent implements OnInit {
             this.po = res['po']
             this.pkp = res['pkp']
           })
+        console.log('---------------------------------------------------------------------------')
       })
   }
 
@@ -449,6 +487,7 @@ export class EncriptationComponent implements OnInit {
   }
 
   sendEncryptmsgShamir() {
+    console.log('Modulo Secreto Compartido Shamir -------------------------------------------')
     // m mensaje encriptado conclave publica B
     const mEncrypt = this.pubKeyB.encrypt(bc.textToBigint(this.valormessageshamir));
     console.log('Shamir secret sharing------------------')
@@ -466,5 +505,6 @@ export class EncriptationComponent implements OnInit {
           console.log('mensage en responsep: ', this.responses);
           console.log('mensage desencriptado: ', this.decryptmessageS);
         });
+    console.log('---------------------------------------------------------------------------')
   }
 }

@@ -1,15 +1,23 @@
 <div class="card">
   <div class="card-header">
-    <h2>Encriptation</h2></div>
+      <h2 class="font-weight-bold">Encriptation</h2>
+      <p class="font-italic">Modulo de Encriptación utilizando firma y forma ciega de un mensaje enviado por el cliente.</p>
+  </div>
   <div class="card-body">
     <form>
       <div class="form-group">
-        <label id="inputMessage">Message to send encrypted</label>
+        <label id="inputMessage">Message to send encrypted:</label>
         <input type="text" class="form-control" name="inMessage" id="inputmsg" placeholder="Enter your message" [(ngModel)]="valormessage" required>
         <button type="button" class="btn btn-outline-primary" (click)="sendEncryptMessage()">Send!</button>
       </div>
       <div class="form-group">
-        <!--<label>Get response from the server</label>-->
+        <label class="enc-message" id="enc-message"></label>
+      </div>
+      <div class="form-group">
+        <label class="dec-message" id="dec-message"></label>
+      </div>
+      <!--<div class="form-group">
+        <label>Get response from the server</label>
         <button type="button" class="btn btn-outline-primary" (click)="get()">Get!</button>
         <label>Respuesta del server:</label>
         <label>{{ responseg }}</label>
@@ -18,15 +26,35 @@
         <button type="button" class="btn btn-outline-primary" (click)="getPublicKeyB()">Get B PublicKey!</button>
         <label id="public-exponent">Public exponent:</label>
         <label>{{ publicexponentB }}</label>
-      </div>
+      </div>-->
       <div class="form-group">
         <button type="button" class="btn btn-outline-primary" (click)="signMessage()">Sign Message!</button>
-        <label class="verifiedmessage">{{ verifiedmessage }}</label>
+      </div>
+      <div class="form-group">
+        <label class="si">Mensaje firmado por el servidor: {{ si }}</label>
+      </div>
+      <div class="form-group">
+        <label class="sM">Verificación de la firma del servidor: {{ sM }}</label>
+      </div>
+      <div class="form-group">
+        <label class="verifiedmessage">Mensaje original verificado: {{ verifiedmessage }}</label>
       </div>
       <div class="form-group">
         <button type="button" class="btn btn-outline-primary" (click)="blindSignMessage()">Blind Sign Message!</button>
-        <label id="bsign-verified">El mensaje verificado es:</label>
-        <label class="blindverifiedmsg"> {{ blindverifiedmsg }}</label>
+        <!--<label id="bsign-verified">El mensaje verificado es:</label>
+        <label class="blindverifiedmsg"> {{ blindverifiedmsg }}</label>-->
+      </div>
+      <div class="form-group">
+        <label class="blind-message" id="blind-message"></label>
+      </div>
+      <div class="form-group">
+        <label class="bsign-message" id="bsign-message"></label>
+      </div>
+      <div class="form-group">
+        <label class="verify-message" id="verify-message"></label>
+      </div>
+      <div class="form-group">
+        <label class="bsign-verified" id="bsign-verified"></label>
       </div>
       <!--<div class="form-group">
         <label for="exampleInputPassword1">Password</label>
@@ -40,8 +68,11 @@
   </div>
 </div>
 <div class="card">
-  <div class="card-header">
-    <h2>Non Repudation</h2></div>
+    <div class="card-header">
+      <h2 class="font-weight-bold">Non-Repudation</h2>
+      <p class="font-italic">Módulo no repudio da seguridad del origen o entrega de datos para proteger al remitente contra la falsa negación por parte del</p>
+      <p class="font-italic">destinatario o para proteger al destinatario contra la negación falsa por el remitente.</p>
+  </div>
   <div class="card-body">
     <form>
       <!--<div class="form-group">

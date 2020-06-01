@@ -43,17 +43,24 @@ async function getPubKey(req, res) {
 
 async function postMessage(req, res) {
     let c = req.body.message
-    console.log("Mensaje recibido desde el cliente: ", c);
+    console.log("Mensaje encriptado recibido desde el cliente: ", c);
     // m mensaje desencriptado
     let m = keys['privateKey'].decrypt(bc.hexToBigint(c))
-    console.log("Mensaje m: ", m);
+    console.log('Mensaje desencriptado en el servidor', {
+        msg: m
+    })
     // return res.json({msn: 'Mensaje recibido!'})
     return res.status(200).send({ message: bc.bigintToHex(m) })
 }
 
 async function signMessage(req, res) {
+    // mensaje que viene del cliente que va a ser firmado
     let m = bc.hexToBigint(req.body.message)
+    // firma del mensaje con la Kpriv del servidor
     let s = keys['privateKey'].sign(m);
+    console.log('Sign message en el server', {
+        sign: bc.bigintToHex(s)
+    })
     return res.status(200).send({ message: bc.bigintToHex(s) })
 }
 
@@ -61,25 +68,31 @@ async function signMessage(req, res) {
  * Non Repudation functions with AES-CBC
  */
 async function nonRepudation(req, res) {
-    console.log('req que viene de A: ', req.body)
+    // console.log('req que viene de A: ', req.body)
     msgCrypto = req.body.body.msg
-    console.log('Mensaje del body: ', msgCrypto)
+    console.log('Mensaje encriptado con AES-CBC en B: ', msgCrypto)
     // Proof of origin
     Po = req.body.signature
-    console.log('Proof of origin: ', Po)
+    console.log('Proof origen en B: ', {
+        po: Po
+    })
     // Extraemos las claves de A
     pubKeyA = new rsa.PublicKey(bc.hexToBigint(req.body.publicKey.e), bc.hexToBigint(req.body.publicKey.n))
-    console.log('pubKeyA en back: ', pubKeyA)
+    // console.log('pubKeyA en back: ', pubKeyA)
     // proof (firma digital) asociada al tipo de mensaje
     const digestProof = bc.bigintToHex(pubKeyA.verify(bc.hexToBigint(req.body.signature)))
-    console.log('digestProof back: ', digestProof)
-    console.log(sha.hashable(req.body.body))
+    // console.log('digestProof back: ', digestProof)
+    // console.log(sha.hashable(req.body.body))
     const digestBody = await sha.digest(req.body.body)
-    console.log('digestBody back: ', digestBody)
-    // Generar timestamp de B
+    // console.log('digestBody back: ', digestBody)
+    // Generar timestamp de B y verificación
     const timestampB = Date.now()
-    //TODO poruqe no son iguales el digestproof y el digestbody
-    if ((digestBody === digestProof)) {
+    const tsnowB = Date.now()
+    console.log('tsnowB: ', tsnowB)
+    const tsresponseA = req.body.body.timestamp
+    console.log('tsresponseA en B: ', tsresponseA)
+    //&& (tsresponseB > (tsnowA - 180000) && tsresponseB < (tsnowA + 180000))
+    if ((digestBody === digestProof) && (tsresponseA > (tsnowB - 180000) && tsresponseA < (tsnowB + 180000))) {
         // Mensaje del body 
         const m = bc.hexToBigint(req.body.body.msg)
         // Creamos el body del mensaje 2
